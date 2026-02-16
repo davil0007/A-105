@@ -1,0 +1,138 @@
+if game.Workspace:FindFirstChild("SeekMovingNewClone") then return end
+---====== Load spawner ======---
+
+local spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynixu/Utilities/main/Doors/Entity%20Spawner/V2/Source.lua"))()
+
+---====== Create entity ======---
+
+local entity = spawner.Create({
+	Entity = {
+		Name = "A-105",
+		Asset = "rbxassetid://16070543373",
+		HeightOffset = 0
+	},
+	Lights = {
+		Flicker = {
+			Enabled = false,
+			Duration = 2
+		},
+		Shatter = true,
+		Repair = false
+	},
+	Earthquake = {
+		Enabled = false
+	},
+	CameraShake = {
+		Enabled = true,
+		Range = 100,
+		Values = {5, 15, 0.1, 1}
+	},
+	Movement = {
+		Speed = 300,
+		Delay = 5,
+		Reversed = false
+	},
+	Rebounding = {
+		Enabled = true,
+		Type = "Ambush",
+		Min = 4,
+		Max = 4,
+		Delay = 0
+	},
+	Damage = {
+		Enabled = true,
+		Range = 65,
+		Amount = 125
+	},
+	Crucifixion = {
+		Enabled = true,
+		Range = 40,
+		Resist = false,
+		Break = true
+	},
+	Death = {
+		Type = "Guiding",
+		Hints = {"You", "Died", "To", "A-105", "LOL", "Better", "luck", "next", "time!"},
+		Cause = "A-105"
+	}
+})
+
+---====== Green Light Effect ======---
+
+local TweenService = game:GetService("TweenService")
+local storedLights = {}
+
+entity:SetCallback("OnSpawned", function()
+    print("Entity has spawned")
+
+    for _, light in pairs(workspace:GetDescendants()) do
+        if light:IsA("PointLight") or light:IsA("SpotLight") or light:IsA("SurfaceLight") then
+            storedLights[light] = light.Color
+            TweenService:Create(
+                light,
+                TweenInfo.new(0.5),
+                {Color = Color3.fromRGB(0, 255, 0)}
+            ):Play()
+        end
+    end
+end)
+
+entity:SetCallback("OnStartMoving", function()
+    print("Entity has started moving")
+end)
+
+entity:SetCallback("OnEnterRoom", function(room, firstTime)
+    if firstTime == true then
+        print("Entity has entered room: ".. room.Name.. " for the first time")
+    else
+        print("Entity has entered room: ".. room.Name.. " again")
+    end
+end)
+
+entity:SetCallback("OnLookAt", function(lineOfSight)
+	if lineOfSight == true then
+		print("Player is looking at entity")
+	else
+		print("Player view is obstructed by something")
+	end
+end)
+
+entity:SetCallback("OnRebounding", function(startOfRebound)
+    if startOfRebound == true then
+        print("Entity has started rebounding")
+	else
+        print("Entity has finished rebounding")
+	end
+end)
+
+entity:SetCallback("OnDespawning", function()
+    print("Entity is despawning")
+end)
+
+entity:SetCallback("OnDespawned", function()
+    print("Entity has despawned")
+
+    for light, oldColor in pairs(storedLights) do
+        if light and light.Parent then
+            TweenService:Create(
+                light,
+                TweenInfo.new(0.5),
+                {Color = oldColor}
+            ):Play()
+        end
+    end
+
+    storedLights = {}
+end)
+
+entity:SetCallback("OnDamagePlayer", function(newHealth)
+	if newHealth == 0 then
+		print("Entity has killed the player")
+	else
+		print("Entity has damaged the player")
+	end
+end)
+
+---====== Run entity ======---
+
+entity:Run()
